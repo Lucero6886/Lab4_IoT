@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lab 4: Giao thức MQTT & Mô hình Publish/Subscribe</title>
+    <title>Lab 4: Giao thức MQTT & Mô hình Publish/Subscribe (MQTTX)</title>
     <style>
         :root {
             --primary: #1e3d59;
@@ -23,6 +23,9 @@
             --student-border: #4caf50;
             --danger-bg: #ffebee;
             --danger-border: #f44336;
+            --keyboard-bg: #eeeeee;
+            --keyboard-border: #cccccc;
+            --placeholder-color: #d32f2f;
         }
 
         body {
@@ -59,6 +62,7 @@
             font-size: 1.5em;
             border-bottom: 1px solid var(--border);
             padding-bottom: 5px;
+            margin-top: 40px;
         }
 
         .meta-grid {
@@ -153,10 +157,33 @@
             border-radius: 3px;
         }
 
+        .placeholder {
+            color: var(--placeholder-color);
+            font-weight: bold;
+            background: rgba(211, 47, 47, 0.1);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
         pre code {
             background: none;
             color: inherit;
             padding: 0;
+        }
+
+        kbd {
+            background-color: var(--keyboard-bg);
+            border: 1px solid var(--keyboard-border);
+            border-radius: 3px;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+            color: #333;
+            display: inline-block;
+            font-family: sans-serif;
+            font-size: 0.85em;
+            font-weight: 700;
+            line-height: 1;
+            padding: 2px 5px;
+            white-space: nowrap;
         }
 
         ul, ol { padding-left: 25px; }
@@ -197,8 +224,8 @@
             margin-right: 10px;
             transform: scale(1.2);
         }
+        
         .hl-yellow { background-color: rgba(255, 235, 59, 0.3); padding: 2px; }
-        .hl-green { background-color: rgba(76, 175, 80, 0.2); padding: 2px; }
     </style>
 </head>
 <body>
@@ -209,7 +236,7 @@
     <div class="meta-grid">
         <div class="meta-item">
             <strong>Tên bài Lab</strong>
-            Lab 4: Giao thức MQTT & Phân phối Dữ liệu (Publish/Subscribe)
+            Lab 4: Giao thức MQTT & Mô hình Publish/Subscribe (với MQTTX)
         </div>
         <div class="meta-item">
             <strong>Chuỗi học phần</strong>
@@ -217,7 +244,7 @@
         </div>
         <div class="meta-item">
             <strong>Nhóm kỹ năng chính</strong>
-            Giao thức Mạng (MQTT), Topic Tree, Asynchronous Callbacks, Data Sniffing
+            Pub/Sub Architecture, MQTT Protocol, Topic Routing, Data Sniffing
         </div>
         <div class="meta-item">
             <strong>Mức độ / Vị trí</strong>
@@ -230,20 +257,20 @@
         <strong>Mục Lục Nhanh:</strong>
         <ul>
             <li><a href="#tong-quan">2. Tổng quan Lab</a></li>
-            <li><a href="#ban-chat">3. Bản chất Học thuật của Giao thức MQTT</a></li>
+            <li><a href="#ban-chat">3. Bản chất Học thuật: Đập vỡ "Hộp Đen" Blynk</a></li>
             <li><a href="#muc-tieu">4. Mục tiêu giảng dạy / học tập</a></li>
-            <li><a href="#kien-thuc">5. Kiến thức nền sinh viên cần có</a></li>
+            <li><a href="#kien-thuc">5. Kiến thức nền (MQTT, Broker, Topic)</a></li>
             <li><a href="#chuan-bi">6. Chuẩn bị trước giờ Lab</a></li>
-            <li><a href="#phan-tich-ht">7. Phân tích Kiến trúc Hệ thống</a></li>
+            <li><a href="#phan-tich-ht">7. Phân tích Kiến trúc Hệ thống & Luồng Dữ liệu</a></li>
             <li><a href="#ket-noi">8. Phân tích Sơ đồ phần cứng</a></li>
-            <li><a href="#tham-so">9. Các tham số Cần Cá nhân hóa (Rất Quan Trọng)</a></li>
+            <li><a href="#tham-so">9. Các tham số Định danh (Chống Đụng Độ Data)</a></li>
             <li><a href="#quy-trinh">10. Quy trình Thực hành Từng bước</a></li>
-            <li><a href="#hoi-dap">11. Sinh viên cần trả lời trước khi Code</a></li>
-            <li><a href="#canh-bao-code">12. CẤM COPY MÙ QUÁNG: Đụng độ dữ liệu đám đông</a></li>
-            <li><a href="#phan-tich-code">13. Phân tích Code Chuẩn: Nghệ thuật Callbacks & Bất đồng bộ</a></li>
-            <li><a href="#checklist">14. Checklist Nghiệm thu</a></li>
-            <li><a href="#debug">15. Debug và Xử lý sự cố (Mạng & Thư viện)</a></li>
-            <li><a href="#danh-gia">16. Tự đánh giá & Bài mở rộng</a></li>
+            <li><a href="#hoi-dap">11. ⚠️ BẮT BUỘC: VƯỢT ẢI CÂU HỎI TRƯỚC KHI XEM CODE</a></li>
+            <li><a href="#canh-bao-code">12. CHỐNG HỌC VẸT: Bẫy Copy Code Mù Quáng</a></li>
+            <li><a href="#phan-tich-code">13. Phân tích Mã nguồn Chuẩn học thuật (Fail-safe Code)</a></li>
+            <li><a href="#checklist">14. Checklist Nghiệm thu Mạng & Mạch</a></li>
+            <li><a href="#debug">15. Debug và Xử lý sự cố MQTT</a></li>
+            <li><a href="#danh-gia">16. Tự đánh giá & Mini Task Mở rộng</a></li>
             <li><a href="#mentor">17. Ghi chú Mentoring cho Giảng viên</a></li>
         </ul>
     </div>
@@ -251,54 +278,50 @@
     <!-- 2. TỔNG QUAN LAB -->
     <h2 id="tong-quan">2. Tổng quan Lab</h2>
     <div class="section-card">
-        <p><strong>Tên chuẩn hóa:</strong> Triển khai Phân phối Dữ liệu Cảm biến Thời gian thực sử dụng Giao thức MQTT (Mô hình Publish/Subscribe).</p>
-        <p><strong>Chủ đề kỹ thuật chính:</strong> Giao thức Message Queuing Telemetry Transport (MQTT), Máy chủ trung gian (MQTT Broker), Cấu trúc phân cấp Chủ đề (Topic Tree), Lập trình TCP/IP Bất đồng bộ (Asynchronous Programming) với Callbacks.</p>
-        <p><strong>Vị trí trong hệ thống:</strong> <strong>Tầng 4 (Giao thức truyền thông cốt lõi)</strong>.</p>
+        <p><strong>Tên chuẩn hóa:</strong> Triển khai Phân phối Dữ liệu Cảm biến Thời gian thực sử dụng Giao thức chuẩn Công nghiệp MQTT (Message Queuing Telemetry Transport).</p>
+        <p><strong>Chủ đề kỹ thuật chính:</strong> Giao thức MQTT, Máy chủ Trung gian (MQTT Broker), Cấu trúc định tuyến Phân cấp (Topic Tree), Công cụ bắt gói tin (MQTTX Desktop), và Kiến trúc phát hành/đăng ký (Publish/Subscribe).</p>
+        <p><strong>Vị trí trong hệ thống:</strong> <strong>Tầng 4 (Giao thức truyền thông Mạng)</strong>.</p>
         <ul>
-            <li><strong>Kế thừa từ Lab 3:</strong> Ở Lab 3, bạn đã dùng Blynk. Blynk bản chất là một "lớp vỏ bọc" (wrapper) hoàn hảo giấu đi sự phức tạp của giao thức mạng. Lab này sẽ lột trần lớp vỏ đó, buộc bạn phải viết lệnh giao tiếp bằng ngôn ngữ chuẩn công nghiệp của IoT: MQTT. Tư duy đa nhiệm (non-blocking) từ Lab 3 được kế thừa và đẩy lên mức độ sâu hơn bằng Event Callbacks.</li>
-            <li><strong>Chuẩn bị cho Lab 5 & 7:</strong> Hiểu cách định tuyến dữ liệu bằng "Topic" ở Lab này là tiền đề bắt buộc để hiểu cách chia nhánh dữ liệu NoSQL trong Firebase (Lab 7) và xử lý JSON payload từ Telegram (Lab 5).</li>
+            <li><strong>Sự chuyển dịch Mô hình:</strong> Ở Lab 3, bạn đã dùng Blynk. Blynk là một dịch vụ PaaS (Platform as a Service) đóng gói sẵn. Nó giấu kín đi sự phức tạp của giao thức truyền thông bên dưới. Lab 4 này sẽ <strong>lột trần lớp vỏ đó</strong>, bắt bạn tự tay cấu hình và điều khiển luồng dữ liệu bằng ngôn ngữ Mạng chuẩn mực của IoT: MQTT.</li>
+            <li><strong>Chuẩn bị cho tương lai:</strong> Hiểu rõ cách "Định tuyến bằng Kênh (Topic)" ở Lab này là tiền đề bắt buộc để bạn hiểu cấu trúc JSON chia nhánh của Firebase ở Lab 7 và cách lọc lệnh Command của Telegram ở Lab 5.</li>
         </ul>
     </div>
 
     <!-- 3. BẢN CHẤT CỦA BÀI LAB -->
-    <h2 id="ban-chat">3. Bản chất Học thuật của Giao thức MQTT</h2>
+    <h2 id="ban-chat">3. Bản chất Học thuật: Đập vỡ "Hộp Đen" Blynk</h2>
     <div class="note-box callout">
-        <span class="callout-title">Mô hình Lắng nghe Không đồng bộ (Publish/Subscribe)</span>
-        <p>Trong giao tiếp Web thông thường (HTTP), Client phải chủ động hỏi Server (Request) để lấy dữ liệu (Response). Đây là mô hình kéo (Pull) rất tốn băng thông. Nhưng MQTT hoạt động theo mô hình <strong>Publish/Subscribe (Xuất bản/Đăng ký)</strong>, một mô hình đẩy (Push) giống như đài phát thanh:</p>
+        <span class="callout-title">Bạn không gửi dữ liệu TRỰC TIẾP cho ai cả!</span>
+        <p>Đa số sinh viên nhầm tưởng rằng mạch ESP8266 gửi dữ liệu "thẳng" sang cái Laptop. Sai hoàn toàn! MQTT hoạt động theo mô hình <strong>Publish / Subscribe (Xuất Bản / Đăng Ký)</strong>. Nó vận hành y hệt một Đài Phát Thanh hay Hệ thống Bưu Điện:</p>
         <ol>
-            <li><strong>NodeMCU (Publisher - Người xuất bản):</strong> Thiết bị nhúng không cần biết dữ liệu sẽ đi về đâu hay ai đang đọc. Nó chỉ gào lên không gian mạng: <em>"Tại địa chỉ 'KHOA_IT/PHONG_LAB/NHIET_DO', tao xin ném lên con số 30!"</em>.</li>
-            <li><strong>Broker (Máy chủ Trung gian - ví dụ test.mosquitto.org):</strong> Là một máy chủ công cộng luôn túc trực ở Port 1883. Nó nhận gói tin từ NodeMCU và phân loại vào các "ngăn tủ" tương ứng với tên Kênh (Topic).</li>
-            <li><strong>MQTTX (Subscriber - Người đăng ký):</strong> Là phần mềm kiểm thử trên máy tính của bạn. Bạn dặn Broker: <em>"Bưu điện ơi, hễ có ai quăng dữ liệu vào 'KHOA_IT/PHONG_LAB/#', hãy báo ngay cho tôi"</em>.</li>
+            <li><strong>The Publisher (Người xuất bản - Mạch NodeMCU):</strong> Mạch ESP8266 KHÔNG CẦN BIẾT cái Laptop hay Điện thoại của bạn đang nằm ở đâu, mang IP gì. Nó chỉ kết nối vào mạng, và "gào" lên không gian: <em>"Này Bưu điện, tại Ngăn tủ mang tên `MSSV_123/NhietDo`, tao xin ném vào đó con số 30°C!"</em>. Xong việc của nó. Nó không quan tâm ai đọc.</li>
+            <li><strong>The Broker (Bưu điện Trung gian - Máy chủ <code>test.mosquitto.org</code>):</strong> Đây là một Máy chủ công cộng (Server) khổng lồ luôn thức trực ở Cổng TCP <code>1883</code>. Nhiệm vụ của nó là nhận các gói tin và phân loại vào các "Ngăn tủ" (Được gọi là <strong>Topic</strong>).</li>
+            <li><strong>The Subscriber (Người đăng ký - Phần mềm MQTTX):</strong> Chiếc Laptop của bạn đóng vai trò Client. Bạn mở phần mềm MQTTX lên, không cần biết mạch ESP8266 ở đâu. Bạn chỉ việc dặn Bưu điện: <em>"Này Broker, hễ có ai quăng bất cứ cái gì vào Ngăn tủ `MSSV_123/NhietDo`, hãy photo 1 bản và gửi ngay về Laptop cho tôi"</em>.</li>
         </ol>
-        <p><strong>Điểm cốt lõi:</strong> NodeMCU và MQTTX <strong>hoàn toàn tách biệt và không hề biết IP của nhau</strong>. Chúng chỉ giao tiếp qua "Mật mã nối rốn" chính là cái tên <strong>Topic</strong>.</p>
+        <p><strong>Kết luận:</strong> Publisher và Subscriber bị "Mù tọa độ" của nhau (Decoupled). Chúng đứt gãy sự ràng buộc về không gian và thời gian. Sợi dây duy nhất kết nối chúng chính là: <strong>Cùng chung TÊN CÁI NGĂN TỦ (TOPIC).</strong></p>
     </div>
 
     <!-- 4. MỤC TIÊU GIẢNG DẠY / HỌC TẬP -->
     <h2 id="muc-tieu">4. Mục tiêu giảng dạy / học tập</h2>
     <div class="section-card">
-        <p>Kết thúc Lab 4, sinh viên phải minh chứng được năng lực:</p>
+        <p>Sau khi hoàn thành Lab 4, sinh viên phải <strong>CHỨNG MINH ĐƯỢC</strong> các năng lực:</p>
         <ol>
-            <li><strong>Giải thích rõ ràng</strong> cơ chế decoupling (tách rời) giữa Publisher và Subscriber trong mạng IoT.</li>
-            <li><strong>Thiết kế được</strong> một cấu trúc Topic theo dạng cây phân cấp (Hierarchical tree) logic và không bị trùng lặp trong hệ thống lớn.</li>
-            <li><strong>Sử dụng chuyên sâu</strong> công cụ MQTTX như một trạm "Sniffer" (bắt gói tin) độc lập để cô lập lỗi phần mềm vs lỗi phần cứng.</li>
-            <li><strong>Tích hợp và sửa lỗi</strong> các thư viện xử lý mạng bất đồng bộ phức tạp (AsyncMqttClient, ESPAsyncTCP).</li>
-            <li><strong>Làm chủ kiến trúc Event-Driven (Hướng sự kiện):</strong> Viết và hiểu các hàm Callbacks thay vì dùng vòng lặp <code>while</code> hoặc <code>delay</code> chờ mạng phản hồi.</li>
+            <li><strong>Giải thích và Vẽ được</strong> mô hình kiến trúc Publish/Subscribe, xác định rõ dòng chảy Dữ liệu (Payload) qua Broker.</li>
+            <li><strong>Thiết kế Cấu trúc Topic:</strong> Biết cách quy hoạch một Cây Chủ đề (Topic Tree) logic, phân cấp rõ ràng (Ví dụ: <code>KhuA/Phong1/NhietDo</code>) để chống đụng độ dữ liệu trên Máy chủ công cộng.</li>
+            <li><strong>Vận hành Công cụ Debug Mạng:</strong> Sử dụng thành thạo phần mềm MQTTX Desktop như một trạm "Sniffer" (Bắt gói tin) độc lập để kiểm toán dữ liệu từ ESP8266.</li>
+            <li><strong>Lập trình C++:</strong> Tích hợp thư viện <code>PubSubClient</code>, khởi tạo vòng lặp duy trì kết nối mạng (Reconnect Logic), và xuất bản dữ liệu DHT11 ở định dạng Chuỗi (String Payload).</li>
+            <li><strong>Tư duy Non-blocking:</strong> Thay thế hoàn toàn hàm <code>delay()</code> bằng bộ đếm thời gian <code>millis()</code> để vi điều khiển không bị sập kết nối với Broker.</li>
         </ol>
     </div>
 
     <!-- 5. KIẾN THỨC NỀN SINH VIÊN CẦN CÓ -->
-    <h2 id="kien-thuc">5. Kiến thức nền sinh viên cần hiểu rõ</h2>
+    <h2 id="kien-thuc">5. Kiến thức nền sinh viên cần thấu hiểu</h2>
     <div class="section-card">
         <ul>
-            <li><strong>MQTT Broker Công cộng:</strong> Bài lab sử dụng <code>test.mosquitto.org</code>. Đây là hộp thư công cộng của toàn thế giới. Bất kỳ ai trên Trái Đất cũng có thể đọc được cảm biến của bạn nếu họ đoán được tên Topic. Do đó, <em>tuyệt đối không gửi thông tin bảo mật (password, token) qua broker này.</em></li>
-            <li><strong>Cấu trúc Wildcard của Topic:</strong> Topic hoạt động như đường dẫn thư mục: <code>nha/tang1/nhietdo</code>. 
-                <br>- Ký tự <code>+</code>: Đại diện cho <strong>1 cấp bất kỳ</strong> (Vd: <code>nha/+/nhietdo</code> sẽ hứng được cả <code>tang1</code> và <code>tang2</code>).
-                <br>- Ký tự <code>#</code>: Đại diện cho <strong>tất cả các cấp phía sau</strong> (Vd: <code>nha/#</code> sẽ hứng toàn bộ dữ liệu trong nhà).</li>
-            <li><strong>QoS (Quality of Service - Chất lượng Dịch vụ):</strong> Giao thức định nghĩa độ tin cậy của việc đưa thư.
-                <br><code>QoS 0</code>: Gửi 1 lần rồi quên (Bắn và Quên). Mạng lag có thể rớt tin. Nhanh nhất.
-                <br><code>QoS 1</code>: Gửi đến khi nào nhận được chữ ký xác nhận (ACK) mới thôi. Chắc chắn đến ít nhất 1 lần (Lab này dùng mức này).
-                <br><code>QoS 2</code>: Bắt tay 4 bước phức tạp, đảm bảo đến chính xác 1 và chỉ 1 lần. Rất chậm.</li>
-            <li><strong>Asynchronous I/O (I/O Bất đồng bộ):</strong> Khi MCU gọi lệnh kết nối WiFi, nó không đứng "treo" ở đó chờ mạng. Nó đi làm việc khác. Khi nào WiFi nối xong, Hệ điều hành (RTOS) của mạch sẽ tự động "đánh thức" hàm Callback <code>onWifiConnect</code>.</li>
+            <li><strong>MQTT Broker Công cộng:</strong> Trong bài Lab này, ta dùng <code>test.mosquitto.org</code> ở Port <code>1883</code>. Đây là hộp thư công cộng của toàn thế giới (Không yêu cầu User/Pass). Bất kỳ ai ở Châu Âu hay Châu Mỹ nếu đoán được cái Tên Topic của bạn đều có thể đọc lén hoặc bơm rác vào mạch của bạn. Do đó, ở Lab này, việc <strong>Đặt tên Topic Độc Lạ</strong> là yếu tố sống còn.</li>
+            <li><strong>Wildcards (Ký tự thay thế) trong Topic:</strong> Khi đăng ký (Subscribe) trên MQTTX để theo dõi, bạn có thể dùng bùa chú:
+                <br>👉 Ký tự <code>+</code>: Đại diện cho <strong>Đúng 1 Cấp</strong> bất kỳ. (Vd: Đăng ký <code>Nha/+/NhietDo</code> sẽ hứng được cùng lúc cả <code>Nha/Tang1/NhietDo</code> và <code>Nha/Tang2/NhietDo</code>).
+                <br>👉 Ký tự <code>#</code>: Đại diện cho <strong>Tất cả các cấp</strong> đằng sau nó. (Vd: Đăng ký <code>Nha/#</code> sẽ gom sạch sành sanh mọi dữ liệu phát ra từ Ngôi nhà đó).</li>
+            <li><strong>Hàm millis() thay cho delay():</strong> <code>delay(2000)</code> bắt chip "đóng băng" não bộ 2 giây. Trong lúc đóng băng, nếu Broker gửi gói tin kiểm tra nhịp tim (Ping), chip không trả lời -> Broker sẽ đá chip văng khỏi mạng. Hàm <code>millis()</code> giống như việc bạn vừa làm việc vừa "liếc nhìn đồng hồ". Nếu thấy trôi qua đủ 2000 mili-giây thì mới kích hoạt hàm đọc cảm biến, thời gian rảnh còn lại chip vẫn liên tục duy trì mạng lưới qua lệnh <code>client.loop()</code>.</li>
         </ul>
     </div>
 
@@ -307,385 +330,381 @@
     <table>
         <tr>
             <th>Hạng mục</th>
-            <th>Chi tiết chuẩn bị</th>
+            <th>Chi tiết yêu cầu & Cảnh báo</th>
         </tr>
         <tr>
-            <td><strong>Phần cứng</strong></td>
-            <td>NodeMCU ESP8266 và module DHT11 cắm vào chân D5 (GPIO14).</td>
+            <td><strong>Phần cứng Thiết bị</strong></td>
+            <td>Rút gọn bớt mạch Breadboard từ Lab 2: Chỉ cần NodeMCU ESP8266 và Cảm biến DHT11 (Chân Data nối D5). <em>(Chúng ta tạm cất LED và Nút bấm để tập trung 100% vào luồng Publish).</em></td>
         </tr>
         <tr>
-            <td><strong>Phần mềm Phân tích</strong></td>
-            <td>Tải và cài đặt <strong>MQTTX Desktop</strong> (https://mqttx.app/) trên máy tính để đóng vai trò Subscriber lắng nghe gói tin.</td>
+            <td><strong>Hạ tầng Mạng</strong></td>
+            <td>Sóng WiFi 2.4GHz. <span class="hl-yellow">Khuyến nghị Bắt buộc:</span> Rất nhiều Router Wifi của Nhà trường/Công ty bật Tường lửa (Firewall) chặn Cổng <code>1883</code> (Cổng MQTT thô không mã hóa). Để đồ án không bị kẹt cứng "Connection Failed", sinh viên hãy tự phát Mobile Hotspot (4G) từ điện thoại.</td>
         </tr>
         <tr>
-            <td><strong>Thư viện Async (Nâng cao)</strong></td>
+            <td><strong>Phần mềm Client & Thư viện</strong></td>
             <td>
-                Tải 2 file <code>.ZIP</code> gốc từ GitHub và cài đặt thủ công qua <em>Sketch > Include Library > Add .ZIP Library</em>:<br>
-                1. <strong>Async MQTT Client</strong> (của tác giả marvinroger)<br>
-                2. <strong>ESPAsyncTCP</strong> (của tác giả me-no-dev)<br>
-                <span class="hl-yellow">Lưu ý: Không dùng chức năng tìm kiếm Library Manager mặc định của IDE để tìm tên này, rất dễ cài nhầm thư viện Synchronous cũ sẽ gây lỗi biên dịch.</span>
+                1. <strong>Tải MQTTX:</strong> Cài đặt phần mềm <a href="https://mqttx.app/" target="_blank">MQTTX Desktop</a> trên Laptop để làm Trạm Thu (Subscriber).<br>
+                2. <strong>Cài Thư viện C++:</strong> Vào <em>Arduino IDE > Manage Libraries</em>, gõ tìm và cài đặt thư viện <code>PubSubClient</code> (Tác giả: <strong>Nick O'Leary</strong>).
             </td>
-        </tr>
-        <tr>
-            <td><strong>Mạng Internet</strong></td>
-            <td><strong>Cảnh báo Tường lửa:</strong> Rất nhiều mạng Wifi của Trường Đại Học/Doanh nghiệp cấu hình Firewall chặn Port <code>1883</code> (Port tiêu chuẩn của MQTT không mã hóa). Để tránh mất thời gian vô ích, <strong>bắt buộc dùng Mobile Hotspot (Phát WiFi 2.4GHz từ điện thoại cá nhân).</strong></td>
         </tr>
     </table>
 
     <!-- 7. PHÂN TÍCH HỆ THỐNG -->
-    <h2 id="phan-tich-ht">7. Phân tích Kiến trúc Hệ thống</h2>
+    <h2 id="phan-tich-ht">7. Phân tích Kiến trúc Hệ thống & Luồng Dữ liệu</h2>
     <div class="section-card">
-        <p>Kiến trúc bài lab buộc bạn phải đóng 2 vai diễn riêng biệt, thông qua một Bưu điện trung gian:</p>
+        <p>Đây là bức tranh Luồng Dữ Liệu (Data Flow) chuẩn công nghiệp của hệ thống MQTT trong bài Lab:</p>
         
         <pre>
-[NodeMCU + DHT11] ------------------------------------> [Máy chủ Broker test.mosquitto.org]
-(Vai diễn 1: Publisher)                                        (Cổng giao tiếp: Port 1883)
-- Gửi: "Nhiệt độ = 29.5"                                                    |
-- Đích đến: Ngăn tủ "MSSV_12345/nhietdo"                                    |
-                                                                            |
-[Máy tính Laptop + MQTTX] <-------------------------------------------------+
-(Vai diễn 2: Subscriber)
-- Đặt lệnh: "Có gì ở ngăn 'MSSV_12345/#' thì ném hết về đây!"
+[NodeMCU + DHT11] ==============================================> [Máy chủ test.mosquitto.org]
+  (Publisher)                                                           (MQTT Broker)
+       |                                                                      |
+       | 1. Nối WiFi                                                          |
+       | 2. Nối MQTT Broker qua TCP Port 1883                                 |
+       |                                                                      |
+       | 3. PUBLISH: Gói tin "29.5" đút vào Ngăn tủ "MSSV/Temp" ---------> [Ngăn "MSSV/Temp"] ---> Đợi người lấy!
+                                                                                      |
+                                                                                      |
+[Laptop cài MQTTX] <==================================================================+
+ (Subscriber)
+       | 1. Mở phần mềm, Connect vào test.mosquitto.org
+       | 2. SUBSCRIBE: Nộp giấy đăng ký "Cho tôi xin mọi thứ ở Ngăn tủ MSSV/Temp"
+       | 3. Cứ khi nào NodeMCU ném data lên, MQTTX lập tức nảy Notification trên màn hình!
         </pre>
-        <p><strong>Trình tự khởi chạy chuẩn xác:</strong></p>
-        <ol>
-            <li>(VAI 2) Mở phần mềm MQTTX trên máy tính, kết nối Broker, đăng ký lắng nghe Topic (Giăng lưới).</li>
-            <li>(VAI 1) Nạp code cho NodeMCU. Khi vừa có điện, NodeMCU sẽ nối WiFi -> Nối Broker.</li>
-            <li>NodeMCU xuất bản (Publish) gói tin đầu tiên. Broker nhận và ngay lập tức "bắn" về lưới MQTTX của bạn. Khoảng cách địa lý bị xóa nhòa.</li>
-        </ol>
     </div>
 
     <!-- 8. SƠ ĐỒ KẾT NỐI -->
     <h2 id="ket-noi">8. Phân tích Sơ đồ phần cứng</h2>
     <div class="mentor-box callout">
-        <span class="callout-title">Tối giản để tập trung vào Tư duy Mạng</span>
-        <p>Rút bỏ toàn bộ LED và Nút nhấn của Lab 3. Chúng ta chỉ cần 1 máy phát dữ liệu duy nhất là DHT11.</p>
+        <span class="callout-title">Tối giản để Cô lập Rủi ro</span>
+        <p>Vì bài Lab này tập trung dồn toàn lực vào Phần mềm Mạng, hãy rút bỏ các linh kiện rườm rà. Chúng ta chỉ cần 1 Cỗ máy phát dữ liệu (Generator) duy nhất.</p>
         <ul>
-            <li><strong>VCC của DHT11:</strong> Cắm vào 3V3 của NodeMCU.</li>
-            <li><strong>GND của DHT11:</strong> Cắm vào GND chung.</li>
-            <li><strong>Chân Data (S / Out) của DHT11:</strong> Cắm vào <strong>D5 (GPIO14)</strong>. <br><em>Ghi chú Kỹ sư: Nếu bạn dùng cảm biến DHT11 màu xanh rời (không nằm trên board mạch nhỏ), bạn BẮT BUỘC phải cắm thêm 1 điện trở Pull-up 10kΩ nối giữa chân Data và chân 3V3, nếu không tín hiệu sẽ bị nhiễu.</em></li>
+            <li><strong>Cảm biến Môi trường DHT11:</strong> 
+                <br> - Chân VCC -> Nối 3V3 của NodeMCU. 
+                <br> - Chân GND -> Nối GND. 
+                <br> - Chân Data -> Cắm vào lỗ <strong>D5 (GPIO14)</strong> của NodeMCU.</li>
         </ul>
     </div>
 
     <!-- 9. THAM SỐ CÁ NHÂN HÓA -->
-    <h2 id="tham-so">9. Các tham số Cần Cá nhân hóa (CẢNH BÁO ĐỎ)</h2>
+    <h2 id="tham-so">9. Các tham số Định danh (Chống Đụng Độ Data)</h2>
     <div class="danger-box callout">
-        <span class="callout-title">Sự cố Đụng độ Dữ liệu (Data Collision)</span>
-        <p>Vì <code>test.mosquitto.org</code> là bưu điện công cộng mở cho cả hành tinh. Nếu bạn để nguyên Topic mẫu là <code>esp_yourname/dht/temperature</code> giống y hệt 50 sinh viên khác trong phòng lab, chuyện gì sẽ xảy ra? Dữ liệu của 50 người sẽ dồn cục vào 1 ngăn tủ duy nhất, và màn hình máy tính của bạn sẽ nhảy số loạn xạ không thể kiểm soát.</p>
+        <span class="callout-title">Tuyệt đối Không dùng Topic mặc định của Sách giáo khoa!</span>
+        <p>Nếu cả lớp 40 sinh viên cùng copy đoạn code mẫu chứa Topic là <code>esp/dht/temperature</code> và nạp vào board. Chuyện gì xảy ra? Ngăn tủ đó trên Server sẽ hứng 40 luồng dữ liệu ập vào cùng 1 giây. Màn hình phần mềm MQTTX của bạn sẽ nhảy số điên loạn (20 độ, 35 độ, 18 độ...) đan xen nhau. Bạn sẽ không biết gói tin nào là của board mình! <strong>Bắt buộc phải cá nhân hóa Tên Ngăn Tủ (Topic)!</strong></p>
     </div>
     <table>
         <tr>
-            <th>Hằng số Code</th>
-            <th>Chức năng</th>
-            <th>Quy tắc thay đổi (BẮT BUỘC)</th>
+            <th>Tham số C++</th>
+            <th>Quy tắc Kỹ sư Định tuyến (Routing Rules)</th>
         </tr>
         <tr>
-            <td><code>WIFI_SSID</code> / <code>PASSWORD</code></td>
-            <td>Đăng nhập mạng WiFi</td>
-            <td>Tên và Pass của điểm phát 4G từ điện thoại bạn.</td>
+            <td><code>mqtt_server</code></td>
+            <td>Khai báo tên miền Máy chủ Trung gian. Điền chuỗi: <code>"test.mosquitto.org"</code></td>
         </tr>
         <tr>
-            <td><code>MQTT_HOST</code></td>
-            <td>Tên miền IP của Broker</td>
-            <td>Giữ nguyên <code>"test.mosquitto.org"</code>. Port mặc định trong thư viện sẽ là 1883.</td>
+            <td><code>topic_temp</code></td>
+            <td><strong>ĐẶT TÊN ĐỘC QUYỀN:</strong> Bắt buộc phải chứa Mã số sinh viên hoặc Tên riêng của bạn để định tuyến. <br>Ví dụ chuẩn: <code>"HUST_IoT/K65_TuanAnh/NhietDo"</code></td>
         </tr>
         <tr>
-            <td><code>MQTT_PUB_TEMP</code></td>
-            <td>Ngăn tủ chứa Nhiệt độ</td>
-            <td><strong>PHẢI thay đổi thành ID duy nhất!</strong> Ví dụ: <code>"HUST_IT/K65/SV_20201234/temp"</code>.</td>
-        </tr>
-        <tr>
-            <td><code>MQTT_PUB_HUM</code></td>
-            <td>Ngăn tủ chứa Độ ẩm</td>
-            <td>Ví dụ: <code>"HUST_IT/K65/SV_20201234/hum"</code>.</td>
+            <td><code>topic_hum</code></td>
+            <td>Tương tự, tạo một nhánh rẽ riêng cho Độ ẩm: <code>"HUST_IoT/K65_TuanAnh/DoAm"</code></td>
         </tr>
     </table>
 
     <!-- 10. QUY TRÌNH THỰC HÀNH TỪNG BƯỚC -->
     <h2 id="quy-trinh">10. Quy trình Thực hành Từng bước (Quy trình Ngược)</h2>
+    <div class="mentor-box callout">
+        <span class="callout-title">Tư duy Sư phạm: Setup "Người Nghe" trước "Người Nói"</span>
+        <p>Sai lầm lớn nhất của sinh viên là hì hục nạp code cho Mạch (Người nói) chạy trước, sau đó mới đủng đỉnh đi mở phần mềm MQTTX (Người nghe). Lúc mở xong, mạch đã bắn xong dữ liệu, kết quả là màn hình trống trơn không thấy gì. <strong>Nguyên tắc Không gian mạng: Phải Giăng Lưới (MQTTX) trước khi Thả Cá (NodeMCU).</strong></p>
+    </div>
+
     <div class="section-card">
-        <h3><span class="step-number">1</span> Pha 1: Setup Trạm Giám Sát (Phần mềm MQTTX)</h3>
-        <p><strong>Mục đích:</strong> Xây dựng "Người nghe" trước khi tung ra "Người nói" để không bỏ sót gói tin đầu tiên.</p>
+        <h3><span class="step-number">1</span> Pha 1: Giăng lưới trên Đám mây (Setup MQTTX)</h3>
+        <p><strong>Mục đích:</strong> Chuẩn bị Trạm Lắng nghe (Subscriber) để vớt gói tin ngay khi mạch vừa boot lên.</p>
         <ol>
-            <li>Khởi động phần mềm <strong>MQTTX</strong> trên Laptop. Nhấn nút <code>+ New Connection</code>.</li>
-            <li>Cấu hình Connection:
+            <li>Khởi động phần mềm <strong>MQTTX</strong> trên Laptop. Bấm nút <code>+ New Connection</code>.</li>
+            <li>Tại bảng General, thiết lập:
                 <ul>
-                    <li><strong>Name:</strong> <code>Laptop_GiamSat</code> (Tùy ý).</li>
-                    <li><strong>Host:</strong> Gõ chính xác <code>test.mosquitto.org</code> (Bỏ qua đoạn <code>mqtt://</code> hệ thống tự thêm).</li>
-                    <li><strong>Port:</strong> <code>1883</code>. Bỏ trống Username/Password. Nhấn <strong>Connect</strong> ở góc trên bên phải.</li>
+                    <li><strong>Name:</strong> Tram_Giam_Sat (Tùy ý).</li>
+                    <li><strong>Host:</strong> Gõ <code>test.mosquitto.org</code> (Đuôi Port 1883 giữ nguyên).</li>
+                    <li>Để trống Username và Password (Vì đây là Public Broker). Bấm nút <strong>Connect</strong> góc trên bên phải. Chờ phần mềm báo <em>Connected</em> màu xanh lá.</li>
                 </ul>
             </li>
-            <li>Quan sát chấm tròn cạnh tên <code>Laptop_GiamSat</code> chuyển sang màu <strong>Xanh lá</strong> (Đã thông mạng).</li>
-            <li>Nhấn <strong>+ New Subscription</strong>. Tại ô Topic, nhập ID duy nhất của bạn có chứa Wildcard: <code>HUST_IT/K65/SV_20201234/#</code>. Đặt QoS = 1. Nhấn <strong>Confirm</strong>. Bạn đã thả lưới xong.</li>
+            <li>Tại màn hình Chat chính, bấm nút <strong>+ New Subscription</strong>.</li>
+            <li>Ô <strong>Topic</strong>: Khai báo CHÍNH XÁC cái Tên Ngăn Tủ bạn dự định lập trình trong Code C++ (Ví dụ: <code>IoT_Lab4/SV_TuanAnh/#</code>). <span class="hl-yellow">Chú ý dấu <code>#</code> ở cuối giúp bạn bắt được toàn bộ các nhánh con (Cả Nhiệt và Ẩm)</span>. Nhấn <strong>Confirm</strong>.</li>
+            <li>Laptop của bạn đã sẵn sàng ở trạng thái đánh chặn (Sniffing)!</li>
         </ol>
 
-        <h3><span class="step-number">2</span> Pha 2: Lắp não cho Trạm Cảm biến (Upload Code)</h3>
-        <p><strong>Mục đích:</strong> Biên dịch Firmware mang giao thức MQTT xuống NodeMCU.</p>
+        <h3><span class="step-number">2</span> Pha 2: Cấy ghép Giao thức vào Não bộ (Arduino IDE)</h3>
         <ol>
-            <li>Vào Arduino IDE. Xác nhận lại đã cài đặt 2 thư viện <code>AsyncMqttClient</code> và <code>ESPAsyncTCP</code> qua đường dẫn ZIP thủ công.</li>
-            <li>Copy toàn bộ Mã nguồn chuẩn ở <strong>Phần 13</strong> vào IDE.</li>
-            <li><strong>Cập nhật 4 tham số mạng và Topic</strong> theo đúng hướng dẫn ở Phần 9. </li>
-            <li>Cắm board, chọn đúng COM Port, nhấn Upload. Xong việc, mở liền Serial Monitor (Baudrate 115200).</li>
+            <li>Mở Arduino IDE. Copy Mã nguồn Chuẩn học thuật (Fail-safe) ở <strong>Phần 13</strong> dán vào IDE.</li>
+            <li><strong>Thử thách Code:</strong> TỰ TAY THAY THẾ các đoạn báo lỗi `<...>` bằng cấu hình WiFi của bạn và Tên Topic Độc quyền giống hệt như bạn vừa Giăng lưới ở Pha 1.</li>
+            <li>Cắm Board, Chọn COM Port và nhấn Upload. Khởi chạy <strong>Serial Monitor</strong> (Baudrate 115200) ngay khi thanh nạp đạt 100%.</li>
         </ol>
 
-        <h3><span class="step-number">3</span> Pha 3: Nghiệm thu Giao thức (Data Sniffing)</h3>
-        <p><strong>Mục đích:</strong> Quan sát dòng chảy vô hình của dữ liệu IoT.</p>
+        <h3><span class="step-number">3</span> Pha 3: Nghiệm thu Giao thức Viễn thông</h3>
         <ol>
-            <li>Trên Serial Monitor, bạn phải thấy trình tự Log: <code>Đang gõ cửa MQTT Broker...</code> -> <code>Đã thông chốt MQTT Broker!</code> -> <code>Đã bắn gói tin...</code>.</li>
-            <li><strong>Hành động Sniffing:</strong> Ngay lập tức mở cửa sổ MQTTX trên máy tính. Cứ mỗi 10 giây (khi Serial báo gửi), giao diện MQTTX phải nảy lên một Message box mới chứa Payload là con số nhiệt độ (ví dụ <code>29.50</code>).</li>
-            <li>Dùng ngón tay áp chặt vào DHT11. Chờ 10-20 giây, giá trị trên MQTTX sẽ tăng dần. Bạn đã nắm trong tay luồng truyền thông vạn vật!</li>
+            <li><strong>Kiểm toán Serial (Dưới đất):</strong> Quan sát Serial Monitor, mạch sẽ báo <code>Đang gõ cửa MQTT Broker...</code> -> <code>ĐÃ THÔNG CHỐT (CONNECTED)</code>. Sau đó cứ mỗi 5 giây, mạch sẽ in dòng <code>[PUBLISH OK] Đã ném gói tin...</code></li>
+            <li><strong>Kiểm toán MQTTX (Trên Mây):</strong> Rời mắt khỏi Serial, nhìn sang màn hình phần mềm MQTTX. Cứ mỗi lần Serial báo ném tin, thì gần như <strong>CÙNG LÚC ĐÓ (Độ trễ < 0.5s)</strong>, cửa sổ chat của MQTTX nảy lên một hộp thoại chứa giá trị (Ví dụ: <code>31.20</code>).</li>
+            <li><strong>Test Sự kiện Thực tế:</strong> Áp hai lòng bàn tay bọc kín lấy cảm biến DHT11. Ngồi đếm nhịp 5 giây. Bạn sẽ thấy đồ thị số trên MQTTX tăng dần lên 32, 33 độ. Bạn đã tự tay hoàn tất một chu trình Viễn trắc IoT (Telemetry) cấp Công nghiệp!</li>
         </ol>
     </div>
 
     <!-- 11. HỎI ĐÁP TRƯỚC CODE -->
-    <h2 id="hoi-dap">11. Sinh viên bắt buộc trả lời trước khi nhận Code</h2>
+    <h2 id="hoi-dap">11. ⚠️ BẮT BUỘC: VƯỢT ẢI CÂU HỎI TRƯỚC KHI XEM CODE</h2>
     <div class="student-box callout">
-        <span class="callout-title">Trình bày với Mentor để chứng minh tư duy Kỹ sư:</span>
+        <span class="callout-title">Bảo vệ Mô hình Kiến trúc Mạng trước Mentor:</span>
+        <p>Sinh viên KHÔNG ĐƯỢC CHÉP CODE nếu chưa trả lời trôi chảy 6 câu hỏi bản chất sau:</p>
         <ol>
-            <li>Trong mô hình bạn vừa setup, mạch NodeMCU đóng vai trò gì? Phần mềm MQTTX đóng vai trò gì? "Kẻ thứ 3" vô hình đứng giữa chúng tên là gì?</li>
-            <li>Tại sao mạch NodeMCU (phát Wifi từ đt A) và Laptop (đang bắt Wifi trường) lại vẫn có thể nhìn thấy dữ liệu của nhau thông qua phần mềm MQTTX? Lõi của MQTT giải quyết bài toán địa lý như thế nào?</li>
-            <li>Ký tự Wildcard <code>#</code> trong phần mềm MQTTX dùng để làm gì? Nếu bạn đổi chữ <code>#</code> thành chữ <code>+</code>, sự khác biệt trong việc bắt dữ liệu là gì?</li>
-            <li>Thuật ngữ <strong>Asynchronous (Bất đồng bộ)</strong> trong tên của thư viện <code>AsyncMqttClient</code> mang lại lợi thế cực lớn nào cho hàm <code>loop()</code> của vi điều khiển so với thư viện tiêu chuẩn?</li>
-            <li>Biến <code>unsigned long currentMillis = millis();</code> dùng để thay thế cho hàm <code>delay(10000)</code>. Hãy giải thích bằng lời cơ chế toán học của biến này trong việc định thời gian 10 giây?</li>
+            <li>Trong mô hình bạn vừa setup ở Pha 1 và Pha 2, đâu là thiết bị đóng vai trò <strong>Publisher</strong> (Kẻ bắn tin)? Đâu là phần mềm đóng vai trò <strong>Subscriber</strong> (Kẻ nghe tin)? Và <strong>Broker</strong> (Kẻ môi giới) nằm ở đâu trên bản đồ thế giới?</li>
+            <li>Tại sao mạch NodeMCU (đang bắt 4G của điện thoại) và Laptop (đang bắt Wifi của trường học) lại vẫn có thể truyền dữ liệu cho nhau chớp nhoáng qua MQTTX? Lõi của MQTT giải quyết sự "Lệch pha IP mạng" này như thế nào?</li>
+            <li>Chuỗi <code>test.mosquitto.org</code> xuất hiện trong code C++ đại diện cho thực thể nào? Nếu rạng sáng mai cái máy chủ có tên miền này bị cháy sập (Server Down), phần mềm MQTTX trên máy bạn có còn nảy số nhiệt độ không?</li>
+            <li>Trong lúc Setup MQTTX, tài liệu hướng dẫn gõ ký tự <strong><code>#</code></strong> (Dấu thăng) vào đuôi Topic (Vd: <code>SV_Tuan/#</code>). Ký tự này được gọi là Wildcard, tác dụng quyền năng của nó dùng để làm gì?</li>
+            <li>Hãy soi kỹ vòng lặp <code>loop()</code>. Tại sao lại phải đẻ ra biến <code>now</code> và <code>lastMsg</code> phức tạp để đếm thời gian 5 giây, mà không dùng thẳng lệnh <code>delay(5000)</code> như bài DHT11 ở Lab 2 cho nhàn não? (Gợi ý: Trả lời liên quan đến hàm <code>client.loop()</code>).</li>
+            <li>Nếu 40 bạn sinh viên trong phòng thực hành hôm nay đều "lười biếng" giữ nguyên cái tên Topic mặc định là <code>khoa_dien_tu/nhiet_do</code> và cùng bấm Upload. Điều tồi tệ gì sẽ diễn ra trên màn hình phần mềm MQTTX của Lớp trưởng?</li>
         </ol>
     </div>
 
-    <!-- 12. KHÔNG COPY CODE MÙ QUÁNG -->
-    <h2 id="canh-bao-code">12. CẤM COPY MÙ QUÁNG: Cạm bẫy Event Callbacks</h2>
+    <!-- 12. CẢNH BÁO CODE MÙ QUÁNG -->
+    <h2 id="canh-bao-code">12. CHỐNG HỌC VẸT: Bẫy Copy Code Mù Quáng</h2>
+    <div class="danger-box callout">
+        <span class="callout-title">5 "Căn bệnh" Tố Cáo Sinh viên chỉ biết bấm Copy-Paste ở Lab 4:</span>
+        <ol>
+            <li>Bấm Upload, IDE văng báo lỗi đỏ chót <code>PubSubClient.h: No such file</code>. Sinh viên đứng gãi đầu gọi Thầy ầm ĩ, thay vì biết đường tự chui vào Library Manager gõ tìm và cài thư viện nền tảng.</li>
+            <li>Nạp code xong, Serial báo <code>Connected</code> đàng hoàng, nhưng nhìn sang màn hình MQTTX thấy <strong>vắng hoe không có tin nhắn nào</strong>. <em>Căn bệnh:</em> Do bị "Lệch pha Topic" (Topic Mismatch). Code MCU bắn vào Ngăn tủ A, nhưng phần mềm MQTTX lại đang chờ khóa mở Ngăn tủ B. Thay vì check lỗi chính tả, sinh viên cứ đổ lỗi do mạng lag!</li>
+            <li>Trên MQTTX số nảy lên loạn xạ như ma nhập: 20 độ, 35 độ, 18 độ... lộn xộn trong cùng 1 giây. Sinh viên kết luận <em>"Cảm biến DHT11 của em bị khùng rồi"</em>. <em>Căn bệnh:</em> Do copy code lười đổi tên Topic cá nhân hóa, dẫn đến việc bị "Đụng độ dữ liệu" (Collision) với hàng chục sinh viên khác đang đẩy chung vào 1 rãnh nước công cộng.</li>
+            <li>Mạch kết nối WiFi thành công, nhưng báo <strong>MQTT Connection Failed, rc=-2</strong> liên tục. Sinh viên khóc lóc đòi đổi mạch. <em>Căn bệnh:</em> Rớt mạng Tầng 4. Do đang dùng mạng WiFi của Doanh nghiệp/Nhà trường có thiết lập Tường lửa chặn cổng <code>1883</code>. Cứ lo đổi board mà không biết tự mở Hotspot 4G.</li>
+            <li>Code gốc chạy hoàn hảo. Giảng viên yêu cầu nâng cấp thêm tính năng chớp đèn LED, sinh viên hồn nhiên ném lệnh <code>delay(2000)</code> vào hàm <code>loop()</code>. Hậu quả: Mạch bị sập mất kết nối với MQTT Broker, văng Offline và vĩnh viễn không gửi được data nữa do dính chặn Ping.</li>
+        </ol>
+    </div>
+    
     <div class="warning-box callout">
-        <span class="callout-title">Lỗi Watchdog Reset (Exception 29) & Disconnect Loop</span>
-        <p>Sinh viên khi chuyển từ tư duy tuyến tính sang tư duy Sự kiện (Event-driven) rất hay mắc sai lầm chết người sau:</p>
-        <p><strong>Sai lầm:</strong> Thấy hàm <code>onWifiConnect()</code> là nơi mạch báo đã có WiFi, sinh viên liền đưa lệnh <code>dht.readTemperature()</code> và <code>delay()</code> vào bên trong hàm ngắt Callback này để chạy thử cho nhanh.</p>
-        <p><strong>Hậu quả phần cứng:</strong> Board NodeMCU lập tức Crash (Văng lỗi vãi chữ đỏ trên Serial) và Reset liên tục. Lý do? Các hàm bắt đầu bằng chữ <code>on...</code> là các <strong>Hàm Ngắt (Interrupt Service Routines - ISR)</strong> do nhân của hệ điều hành gọi. Nếu bạn làm "kẹt" luồng ngắt này bằng các lệnh chiếm thời gian như đọc cảm biến hay delay, hệ thống bảo vệ Watchdog Timer (WDT) sẽ lầm tưởng vi xử lý bị treo và ra lệnh "Giết" (Reset) mạch ngay lập tức.</p>
-        <p><strong>Quy tắc Thép:</strong> Hàm Callback chỉ được phép bật/tắt các biến Cờ (Flags), in ra 1 dòng Log ngắn, hoặc hẹn giờ cho Ticker. Không bao giờ thực thi logic nặng bên trong Callback.</p>
+        <span class="callout-title">"Hậu Quả Của Việc Chỉ Chép Code Mà Không Phân Tích Logic Mạng:"</span>
+        <p>- <strong>Điểm Mù "Non-blocking" (Bộ Đếm Không Chặn):</strong> <em>"Tại sao lại phải đẻ ra đoạn code tính toán <code>(now - lastMsg > 5000)</code> nhức đầu vậy?"</em> <br>👉 Lời giải: Trong thư viện PubSubClient, hàm <code>client.loop()</code> mang tính chất sống còn. Nó phải được CPU gọi liên tục hàng vạn lần mỗi giây để duy trì Nhịp tim (Ping) với Máy chủ Broker. Nếu bạn xài <code>delay(5000)</code>, con chip sẽ ngất xỉu 5 giây, bỏ lỡ nhịp Ping, Broker sẽ kết luận mạch của bạn đã "Tử Vong" và thẳng tay ngắt kết nối (Disconnect). Phương pháp trừ thời gian <code>millis()</code> giúp con chip vừa rảnh tay Giữ kết nối mạng liên tục, vừa cứ đúng 5 giây thì lôi Cảm biến ra đo 1 lần!</p>
     </div>
 
     <!-- 13. PHÂN TÍCH CODE -->
-    <h2 id="phan-tich-code">13. Phân tích Code Chuẩn: Nghệ thuật Callbacks & Trạng thái Máy (State Machine)</h2>
+    <h2 id="phan-tich-code">13. Phân tích Mã nguồn Chuẩn học thuật (Mã Nguồn Fail-safe)</h2>
     <div class="section-card">
-        <p>Bản code này là mẫu mực của lập trình <strong>Non-blocking Networking</strong>. Hệ thống không hề đứng chờ mạng. Mọi thứ được vận hành dựa trên các "Cò súng" (Triggers) thời gian và sự kiện.</p>
+        <p>Mã nguồn C++ bên dưới đã được <strong>Chuẩn hóa (Refactored)</strong> để sử dụng thư viện tiêu chuẩn <code>PubSubClient</code>, kết hợp thuật toán Kết nối lại Tự động (Reconnect Logic) và Định thời Không chặn (Non-blocking).<br>
+        <span class="placeholder">CẢNH BÁO BẪY COPY: Trong Khối 1, tôi đã cố tình gài các thẻ Dữ liệu rỗng nằm trong cặp ngoặc nhọn `<...>`. Việc bôi đen Copy mù quáng toàn bộ nạp vào Board sẽ bị Trình biên dịch C++ BÁO LỖI ĐỎ VÀ CHẶN ĐỨNG (Syntax Error). Bạn BẮT BUỘC phải tư duy, xóa các dấu `<...>` đi và Tự Tay gõ giá trị WiFi, Tên Topic của bạn vào thì Mạch mới có thể hoạt động!</span></p>
         
         <pre><code>#include &lt;ESP8266WiFi.h&gt;
-#include &lt;Ticker.h&gt;
-#include &lt;AsyncMqttClient.h&gt;
+#include &lt;PubSubClient.h&gt;
 #include "DHT.h"
 
 /* ======================================================================
-   1. KHỐI CẤU HÌNH ĐỊNH DANH (THAY ĐỔI CẨN THẬN)
+   KHỐI 1: KHAI BÁO TỌA ĐỘ MẠNG & THÔNG SỐ ĐỊNH DANH (THAY ĐỔI TẠI ĐÂY)
    ====================================================================== */
-#define WIFI_SSID "WIFI_CUA_BAN"
-#define WIFI_PASSWORD "MAT_KHAU_WIFI"
-#define MQTT_HOST "test.mosquitto.org"
-#define MQTT_PORT 1883
+// Tọa độ WiFi (Chỉ dùng mạng 2.4GHz, hoặc Hotspot 4G để tránh Firewall)
+const char* ssid = "<NHẬP_TÊN_WIFI_CỦA_BẠN>";
+const char* password = "<NHẬP_PASS_WIFI>";
 
-// KIẾN TRÚC TOPIC CÂY: {TÊN_DỰ_ÁN}/{MÃ_THIẾT_BỊ}/{CẢM_BIẾN}
-#define MQTT_PUB_TEMP "IOT_LAB/SV123456/dht/temperature"
-#define MQTT_PUB_HUM  "IOT_LAB/SV123456/dht/humidity"
+// Tọa độ Bưu Điện Trung Gian (Public MQTT Broker)
+const char* mqtt_server = "test.mosquitto.org";
+const int mqtt_port = 1883; // Cổng tiêu chuẩn không mã hóa của MQTT
 
-#define DHTPIN 14 // GPIO14 tương ứng chân D5
+// CẤU TRÚC NGĂN TỦ (TOPIC ROUTING) - BẮT BUỘC PHẢI LÀ DUY NHẤT
+// Đừng dùng chung tên với người khác! Ví dụ chuẩn: "IOT_HUST/Lop12A/SV_TuanAnh/NhietDo"
+const char* topic_temp = "<NHẬP_TÊN_NGĂN_TỦ_NHIỆT_ĐỘ_CỦA_RIÊNG_BẠN>";
+const char* topic_hum  = "<NHẬP_TÊN_NGĂN_TỦ_ĐỘ_ẨM_CỦA_RIÊNG_BẠN>";
+
+/* ======================================================================
+   KHỐI 2: KHỞI TẠO ĐỐI TƯỢNG PHẦN CỨNG VÀ MẠNG
+   ====================================================================== */
+#define DHTPIN 14       // Nối chân Data của DHT11 vào lỗ D5 (GPIO14)
 #define DHTTYPE DHT11
 DHT dht(DHTPIN, DHTTYPE);
 
-/* ======================================================================
-   2. KHỞI TẠO ĐỐI TƯỢNG HỆ THỐNG
-   ====================================================================== */
-AsyncMqttClient mqttClient;     // Khởi tạo Lõi xử lý MQTT chạy ngầm (Nền TCP Async)
-Ticker mqttReconnectTimer;      // Bộ đếm giờ phần cứng: Chuyên gọi hàm nối MQTT lại
-Ticker wifiReconnectTimer;      // Bộ đếm giờ phần cứng: Chuyên gọi hàm nối WiFi lại
+WiFiClient espClient;               // Tạo bộ Cổng giao tiếp vật lý tầng TCP/IP
+PubSubClient client(espClient);     // Nhúng giao thức tầng ứng dụng MQTT lên trên cổng TCP/IP đó
 
-// Khai báo công cụ lắng nghe sự kiện mạng (Event Handlers)
-WiFiEventHandler wifiConnectHandler;
-WiFiEventHandler wifiDisconnectHandler;
-
-unsigned long previousMillis = 0;   // Dấu mốc lưu thời gian của cú bắn tin (Publish) trước đó
-const long interval = 10000;        // Nhịp độ gửi tin: 10,000 milliseconds = 10 giây
+unsigned long lastMsg = 0;          // Biến lưu mốc thời gian quá khứ để đếm giờ Non-blocking
+const long interval = 5000;         // Tần suất Bắn dữ liệu (5000ms = 5 giây)
 
 /* ======================================================================
-   3. KHỐI HÀM CALL-BACKS (Hệ điều hành RTOS tự động gọi, KHÔNG gọi trong loop)
+   KHỐI 3: HÀM TỰ ĐỘNG KẾT NỐI (RECONNECT LOGIC)
+   Hàm này là Bùa Hộ Mệnh, tự đập cửa kết nối lại nếu bị rớt mạng MQTT
    ====================================================================== */
-
-// Sự kiện 1: Đứt cáp WiFi, rớt mạng cục bộ
-void onWifiDisconnect(const WiFiEventStationModeDisconnected& event) {
-  Serial.println("[WIFI] Cảnh báo: Rớt mạng WiFi!");
-  mqttReconnectTimer.detach(); // Ngừng ngay việc đập cửa MQTT vì WiFi đã chết
-  wifiReconnectTimer.once(2, connectToWifi); // Cài chuông báo thức: 2 giây sau tự động thử bắt WiFi lại
-}
-
-// Sự kiện 2: Bắt được WiFi, có IP nội bộ
-void onWifiConnect(const WiFiEventStationModeGotIP& event) {
-  Serial.println("[WIFI] Kết nối thành công. IP được cấp.");
-  connectToMqtt(); // Giai đoạn 1 xong. Phát lệnh kết nối lên máy chủ Broker ngay.
-}
-
-// Sự kiện 3: Cửa Bưu điện (Broker) đã mở, cho phép gửi/nhận
-void onMqttConnect(bool sessionPresent) {
-  Serial.println("[MQTT] Đã thông chốt MQTT Broker thành công!");
-  // Tại đây, nếu bạn muốn làm vai Subscriber, bạn sẽ gọi lệnh mqttClient.subscribe(...)
-}
-
-// Sự kiện 4: Bưu điện sập, hoặc bị đá văng khỏi Server
-void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
-  Serial.println("[MQTT] Mất kết nối tới Broker.");
-  if (WiFi.isConnected()) { 
-    // Nếu WiFi nhà vẫn đang chạy tốt, chứng tỏ lỗi do Broker. Cài báo thức 2s sau kết nối lại Broker.
-    mqttReconnectTimer.once(2, connectToMqtt); 
+void reconnect() {
+  // Lặp vô tận cho đến khi Broker cho phép vào
+  while (!client.connected()) {
+    Serial.print("Đang gõ cửa MQTT Broker...");
+    
+    // ĐỊNH DANH CLIENT ID (Bắt buộc phải là ID duy nhất trên mạng)
+    // Nếu 2 board mạch lấy cùng 1 cái tên ID, Máy chủ sẽ đá 1 thằng văng ra.
+    String clientId = "ESP8266Client-";
+    clientId += String(random(0xffff), HEX); // Cộng thêm số Hex ngẫu nhiên để chống trùng lặp
+    
+    // Phát lệnh Xin Đăng Nhập vào Broker
+    if (client.connect(clientId.c_str())) {
+      Serial.println(">> ĐÃ THÔNG CHỐT (CONNECTED)!");
+      
+      // (Tương lai: Nếu bạn muốn làm Subscriber để nhận lệnh điều khiển Đèn, 
+      // bạn sẽ viết lệnh client.subscribe("Ten_Topic_Den"); ở ngay vị trí này).
+      
+    } else {
+      Serial.print(">> THẤT BẠI. Mã lỗi Server (rc) = ");
+      Serial.print(client.state());
+      Serial.println(" -> Sẽ thử đập cửa lại sau 5 giây.");
+      // Chờ 5 giây trước khi gõ cửa lại. (Lưu ý: lệnh delay ở đây hợp lệ vì lúc này Mạch đang mất mạng, chưa cần duy trì loop).
+      delay(5000); 
+    }
   }
 }
 
-// Các hàm tác vụ kết nối thủ công
-void connectToWifi() {
-  Serial.println("[WIFI] Đang phát lệnh dò tìm WiFi...");
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-}
-void connectToMqtt() {
-  Serial.println("[MQTT] Đang gửi gói tin gõ cửa Broker...");
-  mqttClient.connect();
-}
-
 /* ======================================================================
-   4. SETUP & LOOP (Điều phối Không-Đồng-Bộ)
+   KHỐI 4: SETUP - THIẾT LẬP CƠ SỞ CHẠY 1 LẦN
    ====================================================================== */
 void setup() {
   Serial.begin(115200);
   dht.begin();
 
-  // ĐĂNG KÝ HỢP ĐỒNG SỰ KIỆN: Giao nhiệm vụ cho nhân Hệ điều hành
-  // "Này WiFi, hễ có IP thì tự gọi hàm onWifiConnect cho tao nhé!"
-  wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
-  wifiDisconnectHandler = WiFi.onStationModeDisconnected(onWifiDisconnect);
-  
-  mqttClient.onConnect(onMqttConnect);
-  mqttClient.onDisconnect(onMqttDisconnect);
-  
-  // Định tuyến tới Bưu điện (IP và Port)
-  mqttClient.setServer(MQTT_HOST, MQTT_PORT);
+  // BƯỚC 1: KHAI THÔNG SÓNG WIFI
+  Serial.println();
+  Serial.print("Đang đàm phán bắt tay với WiFi: ");
+  Serial.println(ssid);
+  WiFi.mode(WIFI_STA); // Chế độ Trạm thu sóng
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("\n>> Đã chui vào mạng nội bộ. Bắt đầu nối ra Biển lớn MQTT.");
 
-  // Kích hoạt phát súng đầu tiên, đưa cỗ máy vào trạng thái chạy
-  connectToWifi(); 
+  // BƯỚC 2: CHỈ ĐƯỜNG CHO BƯU TÁ TÌM BƯU ĐIỆN
+  client.setServer(mqtt_server, mqtt_port);
+  
+  // (Tương lai: Khai báo Hàm Nhận Lệnh Callback ở đây nếu làm chiều Downlink)
+  // client.setCallback(callback);
 }
 
+/* ======================================================================
+   KHỐI 5: VÒNG LẶP ĐA NHIỆM (MAIN LOOP)
+   ====================================================================== */
 void loop() {
-  unsigned long currentMillis = millis(); // Nhìn đồng hồ xem hiện tại là mili-giây thứ mấy
+  // LÍNH GÁC MẠNG: Nếu mất kết nối với Bưu điện, gọi hàm Tự nối lại ngay lập tức
+  if (!client.connected()) {
+    reconnect();
+  }
+  
+  // MÁY BƠM TIM MẠNG: Phải gọi hàm này liên tục để giữ luồng TCP/IP không bị sập
+  // TUYỆT ĐỐI CẤM nhét lệnh delay() vào vòng lặp này!
+  client.loop();
 
-  // THUẬT TOÁN TIMER KHÔNG CHẶN (NON-BLOCKING):
-  // Nếu khoảng cách giữa Hiện Tại và Quá Khứ >= 10 giây (interval)
-  if (currentMillis - previousMillis >= interval) {
-    previousMillis = currentMillis; // Đồng bộ lại dấu mốc Quá khứ
+  // THUẬT TOÁN ĐẾM GIỜ KHÔNG CHẶN (NON-BLOCKING TIMER)
+  unsigned long now = millis(); // Nhìn đồng hồ hệ thống xem hiện tại là mili-giây thứ mấy
+  
+  // Nếu (Khoảng cách từ Lúc này - Lúc trước >= 5000ms)
+  if (now - lastMsg > interval) {
+    lastMsg = now; // Lưu lại mốc quá khứ mới
     
     // Đọc cảm biến cứng
     float t = dht.readTemperature();
     float h = dht.readHumidity();
 
     if(isnan(t) || isnan(h)) {
-        Serial.println("[LỖI] Không thể giao tiếp với DHT11");
-        return; // Thoát ngang vòng lặp bảo vệ hệ thống
+        Serial.println("[LỖI PHẦN CỨNG] Không thể giao tiếp với DHT11");
+        return; // Thoát ngang vòng lặp, bảo vệ hệ thống không gửi Rác (NaN) lên mạng
     }
 
-    // Đóng gói số thực (float) -> Chuỗi (String) -> Mảng Ký tự (c_str) để đi đường mạng
+    // GIAO THỨC ÉP KIỂU (TYPE CASTING): MQTT chỉ nhận giao hàng Văn bản (String/Char Array)
+    // C++ bắt buộc phải đóng gói Số thực (float) thành Chuỗi String.
     String strTemp = String(t);
     String strHum = String(h);
 
-    // XUẤT BẢN DỮ LIỆU LÊN ĐÁM MÂY (Hành động Publish)
-    // Tham số: Tên_Topic, QoS(1=An toàn), Retain(true=Lưu lại tin cuối), Payload_Nội_dung
-    uint16_t packetId1 = mqttClient.publish(MQTT_PUB_TEMP, 1, true, strTemp.c_str());
-    uint16_t packetId2 = mqttClient.publish(MQTT_PUB_HUM, 1, true, strHum.c_str());
+    // HÀNH ĐỘNG XUẤT BẢN DỮ LIỆU LÊN ĐÁM MÂY (PUBLISH)
+    // Cú pháp: client.publish(TÊN_NGĂN_TỦ, NỘI_DUNG_DẠNG_MẢNG_KÝ_TỰ)
+    // Lệnh .c_str() làm nhiệm vụ biến cái Hộp String cấp cao thành Mảng Char Array thô sơ.
+    client.publish(topic_temp, strTemp.c_str());
+    client.publish(topic_hum, strHum.c_str());
 
-    Serial.printf("[PUBLISH] Đã ném gói tin lên Mây. PacketID: %i, Nhiệt độ: %.2f°C \n", packetId1, t);
+    Serial.printf("[PUBLISH OK] Đã ném gói tin lên Mây. Nhiệt độ: %.2f°C \n", t);
   }
 }</code></pre>
     </div>
 
     <!-- 14. CHECKLIST -->
-    <h2 id="checklist">14. Checklist Nghiệm thu Giao thức</h2>
+    <h2 id="checklist">14. Checklist Nghiệm thu Mạng & Mạch (Acceptance Test)</h2>
     <div class="section-card">
-        <h3>A. Checklist Đảm bảo Môi trường Biên dịch</h3>
-        <div class="checklist-item"><input type="checkbox"> 1. Đã tải và import thành công 2 thư viện <code>AsyncMqttClient.zip</code> và <code>ESPAsyncTCP.zip</code> từ mã nguồn GitHub (không dùng Library Manager).</div>
-        <div class="checklist-item"><input type="checkbox"> 2. Đã thay đổi hằng số <code>MQTT_PUB_TEMP</code> thành mã định danh MSSV cá nhân chưa?</div>
-        <div class="checklist-item"><input type="checkbox"> 3. Đang sử dụng điểm phát WiFi (Mobile Hotspot) từ điện thoại chứ không dùng mạng chung của trường?</div>
+        <h3>A. Checklist Đảm bảo Môi trường phần mềm MQTTX & Code</h3>
+        <div class="checklist-item"><input type="checkbox"> 1. Trong phần mềm MQTTX, Cột Status (Trạng thái kết nối góc trên) đã chớp chấm <strong>Xanh Lá Cây</strong> báo hiệu đã móc nối vào <code>test.mosquitto.org</code> chưa?</div>
+        <div class="checklist-item"><input type="checkbox"> 2. Trong danh sách <em>Subscriptions</em> của MQTTX, bạn đã bấm Tạo Mới (+) và nhập vào CÚ PHÁP ĐỊNH TUYẾN khớp 100% với chuỗi Topic C++ của bạn, kết thúc bằng dấu Wildcard <code>/#</code> chưa? (Ví dụ: <code>IoT_SV/TuanAnh/#</code>).</div>
+        <div class="checklist-item"><input type="checkbox"> 3. Về IDE: Đã tự xóa các bẫy lỗi <code>&lt;...&gt;</code> tà đạo và gõ chuẩn xác cấu hình WiFi cùng tên Topic vào đỉnh file C++ chưa?</div>
 
-        <h3>B. Checklist Vận hành Mạng (Mạch -> Broker -> MQTTX)</h3>
-        <div class="checklist-item"><input type="checkbox"> 1. <strong>Tại MQTTX:</strong> Cột Status góc trái báo chấm tròn xanh lá (Đã thông mạng Broker).</div>
-        <div class="checklist-item"><input type="checkbox"> 2. <strong>Tại MQTTX:</strong> Trong danh sách Subscriptions, đã tạo 1 kênh hứng dữ liệu có chứa dấu <code>#</code> (VD: <code>IOT_LAB/SV123456/#</code>). Đảm bảo ô Payload format để mặc định (Plaintext hoặc JSON).</div>
-        <div class="checklist-item"><input type="checkbox"> 3. <strong>Tại IDE:</strong> Serial Monitor in ra rõ ràng dòng xác nhận: <code>[MQTT] Đã thông chốt MQTT Broker thành công!</code>.</div>
-        <div class="checklist-item"><input type="checkbox"> 4. <strong>Kiểm chứng End-to-End:</strong> Chờ 10 giây, Serial báo <code>[PUBLISH] Đã ném gói tin...</code>. Ngay trong tích tắc đó, phần mềm MQTTX nảy lên một hộp Message màu xanh chứa giá trị nhiệt độ, hiển thị đúng Topic bạn đã cấu hình.</div>
+        <h3>B. Checklist Nghiệm thu Vận hành (Telemetry Output)</h3>
+        <div class="checklist-item"><input type="checkbox"> 1. <strong>Kiểm định Boot Sequence:</strong> Serial Monitor in ra lộ trình trơn tru: <code>Đã chui vào mạng nội bộ...</code> -> <code>Đang gõ cửa MQTT Broker...</code> -> Chốt hạ vinh quang bằng dòng <code>>> ĐÃ THÔNG CHỐT (CONNECTED)!</code></div>
+        <div class="checklist-item"><input type="checkbox"> 2. <strong>Luồng Data Dưới Đất (Serial):</strong> Cứ đều đặn nhịp 5 giây, Serial Monitor phun ra dòng log xác nhận <code>[PUBLISH OK] Đã ném gói tin lên Mây...</code></div>
+        <div class="checklist-item"><input type="checkbox"> 3. <strong>Luồng Data Trên Mây (MQTTX Sniffing):</strong> Nhìn thẳng vào cửa sổ Chat của phần mềm MQTTX. Cứ mỗi lần Serial báo ném tin, thì gần như <strong>CÙNG LÚC ĐÓ (Độ trễ < 0.5s)</strong>, màn hình MQTTX lập tức nảy lên 2 khung tin nhắn chứa Payload là con số thực (Ví dụ: 32.50). Đích đến (Topic) của tin nhắn hiển thị khớp tuyệt đối với Thiết kế trong C++.</div>
+        <div class="checklist-item"><input type="checkbox"> 4. <strong>Test Trực quan Vật lý:</strong> Hà hơi nóng hoặc úp chặt hai lòng bàn tay vào đầu cảm biến DHT11. Ngồi đếm nhẩm 5 giây. Số đo Payload nảy lên trên màn hình MQTTX gia tăng vượt mốc 33 độ! Chúc mừng, bạn đã tạo ra một Trạm Phát Sóng Không Gian mạng hoàn hảo.</div>
     </div>
 
     <!-- 15. DEBUG -->
-    <h2 id="debug">15. Debug và Xử lý sự cố (Mạng & Thư viện Async)</h2>
+    <h2 id="debug">15. Debug và Xử lý sự cố Giao thức MQTT</h2>
     <table class="debug-table">
         <tr>
-            <th>Triệu chứng (Symptoms)</th>
+            <th>Hiện tượng Hệ thống Báo Lỗi</th>
             <th>Căn nguyên Kỹ thuật (Root Cause)</th>
-            <th>Hướng dẫn Sửa lỗi (Troubleshooting)</th>
+            <th>Hành động Chữa cháy (Troubleshooting)</th>
         </tr>
         <tr>
-            <td>Bấm nút Upload bị báo lỗi chữ đỏ: <code>fatal error: AsyncMqttClient.h: No such file or directory</code>.</td>
-            <td>Trình biên dịch IDE không tìm thấy thư viện. Nguyên nhân thường do bạn giải nén file ZIP ra folder có tên sai, hoặc cài nhầm bản Async khác.</td>
-            <td>Thực hiện lại thao tác import chuẩn: <em>Sketch > Include Library > Add .ZIP Library</em>. Chọn trực tiếp file <code>.zip</code> tải về từ Github (không giải nén). Khởi động lại Arduino IDE.</td>
+            <td>Bấm nút Upload Code văng lỗi đỏ chót: <code>fatal error: PubSubClient.h: No such file or directory</code>.</td>
+            <td>Trình biên dịch IDE gào khóc vì không tìm thấy Thư viện. Nguyên nhân 100% do bạn chưa làm bước Cài đặt thư viện hoặc gõ sai tên lúc tìm kiếm.</td>
+            <td>Bật menu <em>Sketch > Include Library > Manage Libraries</em>. Khung Search gõ đúng chữ <code>PubSubClient</code>. Cuộn xuống tìm Tác giả <strong>Nick O'Leary</strong> và nhấn Install. Mọi bộ khác có tên na ná đều có thể xung đột.</td>
         </tr>
         <tr>
-            <td>Log Serial liên tục chạy dòng <code>[WIFI] Kết nối thành công...</code> rồi lập tức <code>[WIFI] Cảnh báo: Rớt mạng WiFi!</code> (Boot-loop).</td>
-            <td>Điện áp cấp từ cổng USB bị sụt nghiêm trọng, hoặc mã nguồn bị xung đột bộ định thời (Ticker Timer) khiến nhân hệ điều hành sụp đổ.</td>
-            <td>Thay cáp USB xịn (lõi đồng lớn). Rút tạm dây cảm biến ra cắm lại để giảm sốc điện. Kiểm tra xem có lỡ tay bỏ hàm <code>delay()</code> nào vào bên trong phần Code Callback không.</td>
+            <td>Serial Monitor phun dòng chữ <code>Connecting to WiFi...</code> và treo máy vĩnh viễn, không thèm đi tới bước đập cửa Broker.</td>
+            <td>Đứt gãy Khâu Bắt tay Router (WiFi Handshake): Gõ sai Pass WiFi (thừa dấu cách ẩn); Bạn ép con chip bắt sóng 5GHz; Hoặc WiFi Trường Học chặn cổng IoT bảo mật lỏng lẻo.</td>
+            <td>Cấm dùng WiFi Trường/Công ty nếu bị treo! Rút điện thoại cá nhân ra, tự phát mạng chia sẻ (Mobile Hotspot sóng 2.4GHz), cấu hình Pass thật thô sơ. Khai báo lại Mạng đó vào code C++ và tiến hành Nạp lại.</td>
         </tr>
         <tr>
-            <td>Log Serial chỉ hiện <code>[MQTT] Đang gửi gói tin gõ cửa Broker...</code> nhưng im bặt, không bao giờ vào được <code>Đã thông chốt</code>.</td>
-            <td>Tường lửa (Firewall) của cục Router Wifi (đặc biệt ở Ký túc xá, Công ty) đã chặn Port <code>1883</code> vì đây là port IoT không bảo mật.</td>
-            <td>Không có cách nào vượt tường lửa mạng ngoài. Bạn bắt buộc phải lấy điện thoại ra, phát mạng 4G Hotspot cá nhân và cho Laptop cùng Mạch nối chung vào đó.</td>
+            <td>Serial báo lên Wifi tốt, nhưng đến khúc đập cửa thì liên tục văng <strong>THẤT BẠI. Mã lỗi (rc) = -2</strong>. Mạch bị kẹt trong Vòng lặp Reconnect.</td>
+            <td>Mã <code>rc=-2</code> nghĩa là "Network Connection Failed" (Tường lửa chặn kết nối). Mạch của bạn đã bị Router phát Wifi thắt cổ tại Port <code>1883</code> vì đây là port MQTT thô sơ (Không có SSL mã hóa) thường bị các cỗ máy doanh nghiệp chặn đứng.</td>
+            <td>Đổi ngay nguồn phát WiFi! Chuyển sang kết nối Hotspot 4G của điện thoại di động khác để bỏ qua hệ thống tường lửa (Firewall Rules) cực đoan của các Router hội trường.</td>
         </tr>
         <tr>
-            <td>Mạch báo đã <code>[PUBLISH]</code> ngon lành, nhưng màn hình <strong>MQTTX đứng im re, không có tin nhắn nào hiện lên</strong>.</td>
-            <td>Lỗi định tuyến Topic (Topic Mismatch). Mạch đang ném đồ vào ngăn tủ A, nhưng phần mềm MQTTX của bạn lại đang chực chờ mở khóa ngăn tủ B.</td>
-            <td>Mở cấu hình thẻ Subscription trên MQTTX, soi từng chữ hoa/chữ thường xem có khớp 100% với biến <code>MQTT_PUB_TEMP</code> trong code C++ không. Tốt nhất là dùng ký tự <code>#</code> ở cuối. (Lưu ý: MQTTX đôi khi parse lỗi nếu Payload set là Hex, hãy chuyển thành Plaintext).</td>
+            <td>Mạch báo <code>[PUBLISH OK]</code> ném tin thành công liên tục, nhưng màn hình <strong>MQTTX Desktop đứng im re, đen ngòm như nghĩa địa</strong>.</td>
+            <td>Sự cố Lệch Pha Định Tuyến (Topic Mismatch). Cỗ máy MCU C++ đang dồn lực bắn gói tin vào cái Ngăn tủ tên là <code>Nha/A</code>, nhưng trên phần mềm MQTTX bạn lại đang đưa chìa khóa đòi mở Ngăn tủ <code>Nha/B</code>. </td>
+            <td>Trên MQTTX, click chuột phải vào cái thẻ Subscription bên cột phải. Bấm Edit. Soi lại bằng kính lúp xem từng Chữ Hoa/Chữ Thường trong Tên Topic có khớp 100% với biến <code>topic_temp</code> trong C++ không. Tốt nhất hãy dùng bùa chú Wildcard <code>#</code> gắn vào đuôi để quét trọn ổ!</td>
         </tr>
     </table>
 
     <!-- 16. TỰ ĐÁNH GIÁ & MỞ RỘNG -->
-    <h2 id="danh-gia">16. Câu hỏi Tự đánh giá & Bài tập Thiết kế Mở rộng</h2>
+    <h2 id="danh-gia">16. Tự đánh giá & Bài tập Mở rộng (Nâng cấp Hệ thống)</h2>
     <div class="section-card">
-        <h3>Bài tập Tư duy Kiến trúc mạng:</h3>
+        <h3>Bài tập Tư duy Kiến trúc Giao thức (QoS & Retain):</h3>
         <ol>
-            <li>Trong lệnh Publish (Khối số 4), bạn đang cấu hình tham số <code>Retain = true</code>. Thử tưởng tượng một kịch bản: Mạch MCU bắn dữ liệu lúc 10h00, nhưng lúc đó Laptop của bạn đang tắt mạng. Đến 11h00 bạn mới mở phần mềm MQTTX lên. Ngay khi bấm Connect, gói tin lúc 10h00 có nảy lên màn hình MQTTX không? Cơ chế Retain của Broker xử lý bộ nhớ này như thế nào?</li>
-            <li>Nếu ta hạ cấp tham số <code>QoS = 1</code> xuống thành <code>QoS = 0</code> trong hàm Publish. Ưu điểm về mặt tốc độ phản hồi và tiết kiệm pin cho mạch là gì? Rủi ro mất mát dữ liệu thường xảy ra khi nào?</li>
+            <li>Trong các hệ thống báo cháy thông minh, người ta sử dụng cờ <strong>Retain (Lưu giữ)</strong> trong giao thức MQTT. Mặc định lệnh <code>client.publish(topic, payload)</code> có Retain = False (Gửi xong là mất tiêu). Nếu bạn thay bằng <code>client.publish(topic, payload, true)</code> (Bật cờ Retain), thì lợi ích cực kỳ to lớn nào sẽ xảy ra khi một cái Laptop nhận tin vừa bị cúp điện sập nguồn, sau 1 tiếng mở lại phần mềm MQTTX và ấn Connect? (Gợi ý: Máy chủ Broker lúc này đóng vai trò gì?).</li>
         </ol>
 
-        <h3>Mini Tasks Chinh phục (Thực hành Xây dựng Topology):</h3>
+        <h3>Mini Tasks Chinh phục (Thực hành Nâng cấp Hệ thống ngay tại Lab):</h3>
         <div class="student-box callout">
-            <span class="callout-title">Nhiệm vụ: Quy hoạch Cây Chủ đề (Topic Tree Design)</span>
-            Hãy biến 1 mạch NodeMCU duy nhất đóng vai trò làm trạm tổng (Gateway) của một tòa nhà thông minh. Hãy sửa code để nó Publish liên tiếp 4 chủ đề (Topics) sau:<br>
-            1. <code>SmartHome/Khu_A/Tang1/NhietDo</code> (Đọc từ DHT11 thực)<br>
-            2. <code>SmartHome/Khu_A/Tang1/DoAm</code> (Đọc từ DHT11 thực)<br>
-            3. <code>SmartHome/Khu_B/Tang2/NhietDo</code> (Tự hardcode một biến ảo ví dụ: 35 độ)<br>
-            4. <code>SmartHome/Khu_B/Tang2/DoAm</code> (Tự hardcode biến ảo: 80%)<br><br>
-            <strong>Thử thách Sniffing:</strong> Trên phần mềm MQTTX, nếu bạn tạo 1 Subscription có tên là <code>SmartHome/+/+/NhietDo</code>. Khi mạch chạy, màn hình MQTTX của bạn sẽ chỉ hứng được những luồng dữ liệu (Payload) nào? Hãy thực hành và giải thích tác dụng lọc (Filtering) của ký hiệu Wildcard <code>+</code>.
+            <span class="callout-title">Mini Task 1: "Thám Tử" Dữ Liệu Chéo (Cross-Sniffing Warfare)</span>
+            Đây là lúc thể hiện sự ma thuật của Không gian Mạng Phân Tán (Decentralized)! Bạn không cần dây nối để truyền dữ liệu.
+            <br>=> <strong>Nhiệm vụ giao phó:</strong> Hãy rủ một người bạn ở tổ thực hành bên cạnh hợp tác. Bạn A (Máy 1) lấy C++ đổi tên biến Topic Publish nhiệt độ thành <code>Chuyen_Giao_A</code>. Bạn B trên máy tính số 2, mở MQTTX và Subscribe vào đúng cái Topic <code>Chuyen_Giao_A</code> đó. Hai máy tính bắt 2 mạng Wifi khác nhau, nằm cách xa nhau hoàn toàn. 
+            <br>=> <strong>Quan sát Nghiệm thu:</strong> Bạn A dùng tay hơ nóng cảm biến, Laptop của Bạn B nảy số rần rần! Bạn vừa hoàn thành khóa huấn luyện truyền tin Xuyên Lục Địa (Cross-continent Comm) dựa trên cơ sở hạ tầng đám mây.
+        </div>
+        <div class="student-box callout">
+            <span class="callout-title">Mini Task 2: Nghệ thuật Thuật Toán Lắng Nghe - Lập Trình Lượt về (SUBSCRIBER)</span>
+            Đồ án của bạn mới chỉ làm được Lượt đi (Up-link: Sensor -> Mây). Một trạm không gian hoàn hảo phải làm được Lượt về (Down-link: Mây -> Nhận Lệnh -> Kích hoạt Hardware).
+            <br>=> <strong>Nhiệm vụ tác chiến:</strong> Cắm 1 con đèn LED rời vào chân <strong>D6</strong> của NodeMCU. Bổ sung đoạn code C++ theo 3 bước sau:
+            <br>1. Trong hàm <code>reconnect()</code>, bổ sung lệnh đăng ký nghe ngóng ngay dưới chữ CONNECTED: <code>client.subscribe("ĐIỀU_KHIỂN_CỦA_TÔI");</code>
+            <br>2. Ở ngoài vùng Setup (Trên cùng), tạo một hàm Ngắt Callback có cấu trúc: <code>void callback(char* topic, byte* payload, unsigned int length) { ... }</code>. Hàm này có nhiệm vụ in ra Serial nội dung của <code>payload</code>. Nếu payload nhận được là chữ "1" thì dùng <code>digitalWrite</code> bật chân D6 sáng. Nếu là "0" thì tắt.
+            <br>3. Ở Pha <code>setup()</code>, liên kết não bộ bằng lệnh: <code>client.setCallback(callback);</code>
+            <br>=> <strong>Kiểm thử:</strong> Lên phần mềm MQTTX, thiết lập thẻ Message Box bên phải. Gõ Topic gửi là <code>ĐIỀU_KHIỂN_CỦA_TÔI</code>, ở khung nội dung văn bản (Payload) gõ số <code>1</code> và bấm Nút SEND (Hình máy bay giấy). Nếu đèn D6 chớp sáng bừng lên. Xin cúi mình bái phục, bạn đã làm chủ 100% Quyền lực của IoT Core Công nghiệp!
         </div>
     </div>
 
     <!-- 17. MENTORING CHO GIẢNG VIÊN -->
     <h2 id="mentor">17. Sổ tay Điều phối dành riêng cho Giảng viên / Mentor</h2>
     <div class="mentor-box callout">
-        <span class="callout-title">Kịch bản Điều phối Thực chiến Giao thức Mạng (MQTT)</span>
+        <span class="callout-title">Kịch bản Điều phối Thực chiến tại Lab 4 (Giao thức Core MQTT)</span>
         <ul>
-            <li><strong>Khắc sâu Tư duy "Mù Tọa Độ" (Decoupling):</strong> Khoảng 5 phút đầu giờ, Mentor cầm mạch giơ lên tay trái, và chỉ vào Laptop sinh viên ở tay phải. Nhấn mạnh nguyên lý cốt tử: "Mạch điện này không hề biết địa chỉ IP của Laptop. Laptop không có quyền gọi trực tiếp cho mạch. Cả 2 đều là những thiết bị mù tọa độ của nhau, chúng mượn mồm của 1 con Server trung gian tít bên Châu Âu để nói chuyện". Cần vẽ nhanh mô hình tam giác (Publisher -> Broker -> Subscriber) lên bảng.</li>
-            <li><strong>Trả lời câu hỏi "Tại sao lại bỏ Blynk?":</strong> Phải làm rõ cho sinh viên hiểu: Blynk là "Bát mì ăn liền", mọi giao thức mạng phức tạp bị giấu nhẹm vào lệnh <code>Blynk.run()</code>. Giao thức MQTT mới là "Nguyên liệu thô" chuẩn công nghiệp (Industrial Standard). Biết dùng MQTT gốc, sinh viên có thể tự do cắm thiết bị của mình vào các nền tảng lõi như Home Assistant, AWS IoT Core, hay Google Cloud IoT mà không bị trói buộc vào hệ sinh thái tính phí của Blynk.</li>
-            <li><strong>Cạm bẫy cực hiểm của Thư viện Bất đồng bộ (Async):</strong> Code trong Lab 4 này mang tư duy khác hẳn Lab 1, 2. Nó dùng các hàm Callbacks. Nghĩa là: "Hàm <code>loop()</code> chạy rỗng tuếch. Khi nào cáp rớt mạng, Hệ điều hành (RTOS) của ESP8266 tự động cướp cò và gọi hàm báo rớt". Mentor phải cảnh báo mạnh: Tuyệt đối không để sinh viên cố chèn <code>delay()</code> hoặc các vòng lặp <code>while</code> nặng nề vào code này, nó sẽ làm sụp đổ hoàn toàn kiến trúc bất đồng bộ của chuỗi TCP, dẫn đến vi điều khiển văng lỗi Exception Reset (Crash nhân).</li>
-            <li><strong>Trò chơi Nghiệm thu Chéo (Cross-sniffing Roleplay):</strong> Đây là tiết mục "đỉnh" nhất của Lab này. Hãy chỉ định 2 sinh viên (SV-A và SV-B). Bắt SV-A đổi tên Topic thành <code>IoT_Class/Khoa_Dien/Trạm_A/NhietDo</code>. Bắt SV-B mở phần mềm MQTTX, đăng ký lắng nghe (Subscribe) đúng Topic đó. Sau đó, SV-A hơ nóng cảm biến DHT11 của mình. Ngay lập tức, màn hình Laptop của SV-B nảy số vù vù. Trải nghiệm "Ma thuật" này chứng minh một cách hoàn hảo sức mạnh phân tán địa lý của kiến trúc IoT (Các thiết bị liên lạc ngang hàng không cần nối chung 1 Router Wifi hay 1 máy tính vật lý).</li>
+            <li><strong>Màn Phá Băng Thiết lập Kiến trúc (Quy tắc "Mù Tọa Độ"):</strong> Bước vào Lab 4, hãy bắt đầu bằng việc rút một cọng cáp từ Laptop giơ lên. Giảng viên / Mentor hỏi xoáy sinh viên: <em>"Lab 1, 2 các em nối dây điện. Lab 3 các em lệ thuộc vào cái vỏ bọc mỹ miều của App Blynk. Hôm nay, thầy sẽ xé bỏ cái lớp vỏ màu mè đó. Giao thức MQTT là Cốt lõi của lõi. Nguyên lý bất diệt: Mạch điện này không hề biết địa chỉ IP của Laptop thầy. Laptop thầy không có quyền gõ cửa trực tiếp cái Mạch. Cả 2 đều là những thiết bị Mù Tọa Độ của nhau, chúng mượn cái mồm của 1 con Server trung gian tít bên Châu Âu để tuồn thư từ. Giờ là lúc các em tập làm Bưu tá!"</em>. Giảng viên cần cầm phấn vẽ ngay cái mô hình tam giác kinh điển (Publisher -> Broker -> Subscriber) lên chính giữa bảng đen.</li>
+            <li><strong>Trả lời Phản biện "Tại sao lại bỏ xó thằng Blynk?":</strong> Phải làm rõ sự tàn khốc của thị trường lao động cho sinh viên hiểu: Blynk là "Mì ăn liền", mọi giao thức mạng phức tạp xé bit bị giấu nhẹm vào cái hàm tàng hình <code>Blynk.run()</code>. Nhưng Ngành Công nghiệp Tự động hóa KHÔNG trả lương cao cho thợ kéo thả App. Giao thức MQTT mới là "Hàng thô" chuẩn Công nghiệp (Industrial Protocol). Trị được MQTT, sinh viên tự tin xách đồ án cắm thiết bị của mình vào các Nền tảng lõi tối cao như Home Assistant, AWS IoT Core, hay Google Cloud IoT mà không bị trói buộc gông cùm vào hệ sinh thái hút máu đóng phí của Blynk.</li>
+            <li><strong>Cạm bẫy Bất đồng bộ (Async Delay Trap):</strong> Code trong Lab 4 mang tư duy đẳng cấp khác. Nó dùng bộ đếm ngầm <code>millis()</code>. Giảng viên phải soi chiếu từng bàn. Cấm tiệt sinh viên gõ chữ <code>delay()</code> vào hàm <code>loop()</code>. Phải giải thích được: <em>"Khi em xài delay(5000), con chip bị ngất xỉu 5 giây. Router mạng ngỡ nó chết nên sút nó văng khỏi hạ tầng TCP. Hàm millis() dạy con chip cách Vừa làm Việc rảnh rỗi Giữ Sóng Mạng (client.loop), Vừa chớp mắt canh chừng đồng hồ đếm giờ"</em>.</li>
+            <li><strong>Tuyệt Kỹ Nghiệm thu Chéo (Cross-Sniffing Warfare):</strong> Đây là trò chơi tâm lý đỉnh nhất của Lab này. Giảng viên hãy chỉ định 2 sinh viên bất kỳ xa nhau (SV A và SV B). Lệnh cho SV A đổi Topic thành <code>MatMa/SieuCap/123</code>. Ra lệnh cho SV B mở phần mềm MQTTX, đăng ký (Subscribe) áp tai vào đúng Topic đó. Sau đó, hô hào SV A hơ lửa đốt cái cảm biến DHT11. Ngay lập tức, màn hình Laptop của SV B ở góc phòng nảy số liên hồi! Sự trải nghiệm "Ma thuật truyền tin" này chứng minh một cách hoàn hảo và khắc sâu vào não bộ sức mạnh phi tập trung địa lý của kiến trúc Phân Tán (Decentralized Network).</li>
         </ul>
     </div>
-
-    <hr style="margin-top:40px; border-top: 1px solid #ccc;">
-
-    <div class="note-box callout">
-        <span class="callout-title">Nhật ký Biên tập (Phản hồi Học thuật cho Giáo trình Gốc)</span>
-        <p><strong>Cập nhật Khung Kiến thức Hệ thống cho Lab 4:</strong></p>
-        <p>- <strong>Lấp đầy Lỗ hổng Kiến trúc Callbacks:</strong> Sách PDF gốc (Trang 11-13) nhảy trực tiếp vào việc khai báo các hàm <code>onMqttConnect...</code> của thư viện <code>AsyncMqttClient</code> nhưng lại bỏ qua phần giải thích bản chất "Sự kiện Ngắt mềm" (Software Interrupt). Nếu không diễn giải cơ chế này, sinh viên sẽ không hiểu tại sao trong hàm <code>loop()</code> không hề có lệnh <code>connect()</code> mà mạch vẫn tự bắt được mạng khi bị rớt. Bản chuẩn hóa HTML này đã đóng gói các hàm Callback vào một mục riêng, mô tả nó như các "Hợp đồng sự kiện" ký kết với Hệ điều hành.<br>
-        - <strong>Xử lý Rủi ro Bảo mật & Đụng độ Dữ liệu (Collision Avoidance):</strong> Việc hướng dẫn sử dụng Public Broker <code>test.mosquitto.org</code> kèm theo Topic mẫu <code>esp_yourname/dht/temperature</code> trong giáo trình gốc là một "thảm họa" khi triển khai phòng Lab tập trung. Hàng chục sinh viên sẽ vô tình xả lệnh Publish vào cùng 1 kênh, gây nhiễu loạn MQTTX. Tài liệu đã bổ sung Block Cảnh báo Đỏ (Phần 9 & 12), ép buộc sinh viên phải tư duy phân bổ định danh cá nhân (MSSV) vào cấu trúc Topic String (Topic Tree Design) để tạo không gian mạng độc lập.<br>
-        - <strong>Chuẩn hóa Trình tự Sư phạm (Reverse Workflow):</strong> PDF gốc hướng dẫn nạp Code Firmware cho mạch trước, rồi mới mở MQTTX bắt tin. Phương pháp này khiến sinh viên bỏ lỡ gói tin đầu tiên (có cờ Retain) và không hiểu quy trình Handshake. Ở bản HTML, Quy trình (Phần 10) đã được đảo ngược (Reverse): Yêu cầu thiết lập MQTTX (Người nghe) <strong>trước tiên</strong>. Khi "Lưới" đã giăng sẵn, mới kích hoạt mạch phát dữ liệu. Điều này rèn luyện tư duy Debug chuẩn xác của Kỹ sư Viễn thông.</p>
-    </div>
-
-    <p style="text-align:center; color: #888; font-size: 0.9em; margin-top: 30px;">
-        <em>Tài liệu được Chuẩn hóa Kiến trúc theo định hướng Kỹ sư hệ thống (Mentor-Guided). Chinh phục thành công kiến trúc phi tập trung của MQTT ở Lab 4 chính là tấm vé thông hành đưa bạn vào hàng ngũ của các Kỹ sư Phát triển IoT chuyên nghiệp thực thụ.</em>
-    </p>
 
 </div>
 
